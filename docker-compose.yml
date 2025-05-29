@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # prestashop
+  prestashop:
+    build:
+      context: ./prestashop
+      dockerfile: Dockerfile
+    container_name: prestashop
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      DB_SERVER: mysql
+      DB_NAME: prestashop
+      DB_USER: user
+      DB_PASSWD: password
+    volumes:
+      - prestashop_data:/var/www/html
+    ports:
+      - "80:80"
+    networks:
+      - prestashop_network
+
+  # mysql
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: prestashop
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - prestashop_network
+
+  # phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: user
+      PMA_PASSWORD: password
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8080:80"
+    networks:
+      - prestashop_network
+
+  # reverse proxy (apache)
+
+  # cerbot
+
+  # Prometheus
+
+  # Grafana
+
+  # cAdvisor
+
+  # Node Exporter
+
+  # AlertManager
+
+  # Backup
+
+volumes:
+  mysql_data:
+  prestashop_data:
+
+networks:
+  prestashop_network:
+    driver: bridge
