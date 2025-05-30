@@ -17,8 +17,6 @@ services:
       DB_PASSWD: password
     volumes:
       - prestashop_data:/var/www/html
-    ports:
-      - "80:80"
     networks:
       - prestashop_network
 
@@ -32,8 +30,6 @@ services:
       MYSQL_DATABASE: prestashop
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -51,26 +47,26 @@ services:
       PMA_USER: user
       PMA_PASSWORD: password
       UPLOAD_LIMIT: 64M
-    ports:
-      - "8080:80"
     networks:
       - prestashop_network
 
-  # reverse proxy (apache)
-
-  # cerbot
-
-  # Prometheus
-
-  # Grafana
-
-  # cAdvisor
-
-  # Node Exporter
-
-  # AlertManager
-
-  # Backup
+  # reverse proxy nginx
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - prestashop
+      - phpmyadmin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - prestashop_network
 
 volumes:
   mysql_data:
