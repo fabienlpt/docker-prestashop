@@ -1,5 +1,3 @@
 monitoring/alertmanager.yml
 
 .env
-monitoring/alertmanager.yml
-.env
