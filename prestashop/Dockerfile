@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
 COPY php.ini /usr/local/etc/php/php.ini
 
 RUN mkdir -p /var/www/html && \
-    chown -R prestashop:prestashop /var/www/html
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
 
-USER prestashop
 
 EXPOSE 80
 
