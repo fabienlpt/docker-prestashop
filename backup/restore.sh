@@ -6,50 +6,32 @@ DB_USER="root"
 DB_PASSWORD="${MYSQL_ROOT_PASSWORD}"
 DB_NAME="${MYSQL_DATABASE}"
 BACKUP_DIR="/backup"
-MAX_BACKUPS=12
 
-# Créer le répertoire de backup s'il n'existe pas
-mkdir -p ${BACKUP_DIR}
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <nom_du_fichier_backup>"
+    echo "Fichiers disponibles:"
+    ls -la ${BACKUP_DIR}/prestashop_backup_*.sql.gz 2>/dev/null || echo "Aucun backup trouvé"
+    exit 1
+fi
 
-# Nom du fichier de backup avec timestamp
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILE="${BACKUP_DIR}/prestashop_backup_${TIMESTAMP}.sql"
+BACKUP_FILE="$1"
 
-echo "$(date): Début du backup de la base de données ${DB_NAME}"
+if [ ! -f "${BACKUP_DIR}/${BACKUP_FILE}" ]; then
+    echo "ERREUR: Fichier de backup non trouvé: ${BACKUP_DIR}/${BACKUP_FILE}"
+    exit 1
+fi
 
-# Créer le backup
-docker exec ${DB_CONTAINER} mysqldump \
-    -u${DB_USER} \
-    -p${DB_PASSWORD} \
-    --single-transaction \
-    --routines \
-    --triggers \
-    --databases ${DB_NAME} > ${BACKUP_FILE}
+echo "$(date): Début de la restauration depuis ${BACKUP_FILE}"
 
-if [ $? -eq 0 ] && [ -s ${BACKUP_FILE} ]; then
-    echo "$(date): Backup créé avec succès: ${BACKUP_FILE}"
-    
-    # Compresser le backup (forcer l'écrasement si existe)
-    gzip -f ${BACKUP_FILE}
-    BACKUP_FILE="${BACKUP_FILE}.gz"
-    echo "$(date): Backup compressé: ${BACKUP_FILE}"
-    
-    # Rotation des backups
-    cd ${BACKUP_DIR}
-    BACKUP_COUNT=$(ls -1 prestashop_backup_*.sql.gz 2>/dev/null | wc -l)
-    echo "$(date): Nombre de backups existants: ${BACKUP_COUNT}"
-    
-    if [ ${BACKUP_COUNT} -gt ${MAX_BACKUPS} ]; then
-        echo "$(date): Suppression des anciens backups..."
-        ls -t prestashop_backup_*.sql.gz | tail -n +$((MAX_BACKUPS + 1)) | xargs -r rm
-        echo "$(date): Anciens backups supprimés"
-    fi
-    
-    echo "$(date): Backup terminé avec succès"
-    echo "$(date): Taille du backup: $(du -h ${BACKUP_FILE} | cut -f1)"
-    
+if [[ ${BACKUP_FILE} == *.gz ]]; then
+    zcat ${BACKUP_DIR}/${BACKUP_FILE} | docker exec -i ${DB_CONTAINER} mysql -u${DB_USER} -p${DB_PASSWORD}
 else
-    echo "$(date): ERREUR - Le backup a échoué ou le fichier est vide"
-    [ -f ${BACKUP_FILE} ] && rm ${BACKUP_FILE}
+    cat ${BACKUP_DIR}/${BACKUP_FILE} | docker exec -i ${DB_CONTAINER} mysql -u${DB_USER} -p${DB_PASSWORD}
+fi
+
+if [ $? -eq 0 ]; then
+    echo "$(date): Restauration terminée avec succès"
+else
+    echo "$(date): ERREUR - La restauration a échoué"
     exit 1
 fi

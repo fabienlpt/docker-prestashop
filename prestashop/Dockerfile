@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
+COPY php.ini /usr/local/etc/php/php.ini
+
 RUN mkdir -p /var/www/html && \
     chown -R prestashop:prestashop /var/www/html
 
