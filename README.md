@@ -100,6 +100,14 @@ docker compose ps
 | **Prometheus** | http://localhost:9090 | -                |
 | **cAdvisor**   | http://localhost:8081 | -                |
 
+## 🔐 Connexion au Back-Office PrestaShop
+
+### Accès administrateur
+
+- **URL** : http://localhost/admin/
+- **Email** : `demo@prestashop.com`
+- **Mot de passe** : `prestashop_demo`
+
 ## 💾 Système de Backup
 
 ### Gestion des backups
