@@ -156,5 +156,9 @@ volumes:
 networks:
   prestashop_network:
     driver: bridge
+  database_network:
+    driver: bridge
   monitoring_network:
+    driver: bridge
+  frontend_network:
     driver: bridge
